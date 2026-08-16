@@ -1,0 +1,61 @@
+{
+  "name": "dsh-secret-guard",
+  "version": "0.1.0",
+  "description": "A DeepSeek Harness (dsh) security plugin: blocks agents from reading or writing sensitive files (.env, credentials, key material), masks leaked secret-shaped values in tool results, keeps an audit journal, and exposes safe inspection tools that never print raw values.",
+  "keywords": [
+    "deepseek",
+    "deepseek-harness",
+    "dsh-plugin",
+    "security",
+    "secrets",
+    "guard",
+    "redaction",
+    "env"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "main": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "tests",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts && npm run smoke:strip",
+    "smoke:strip": "node --input-type=module -e \"await import('./src/index.ts')\" && echo strip-only load OK"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-llm": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-tools": "^0.1.0-rc.6",
+    "schemastery": "^3.18.0"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-llm": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-tools": "0.1.0-rc.6",
+    "@types/node": "^22.10.0",
+    "schemastery": "^3.18.0",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.0"
+  }
+}

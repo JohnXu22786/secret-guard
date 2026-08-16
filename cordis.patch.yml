@@ -1,0 +1,18 @@
+# secret-guard bundle patch
+#
+# 通过 `dsh plugin --profile web add .`（或 headless）安装后，宿主把本包链接进
+# profile 的 node_modules，并按 package.json 的 `dsh.bundle.patch` 把本文件作为
+# bundle 层加载。`name` 从 profile 目录解析为模块标识符，因此这里写包名（或包的
+# 子路径导出），不能写绝对路径——未安装时请改用绝对路径 overlay（见 README
+# 「本地开发」），例如 `name: 'D:/path/to/secret-guard/src/index.ts'`。
+#
+# 行字段说明：`id` 是插件行键（--dump-config / patch 覆盖用），`name` 是模块
+# 标识符（须为包名），插件自身导出的 `name` 是显示名（secret-guard）。
+# 未安装时用绝对路径 overlay：Windows 必须 `file:///D:/...` 形式（Node ESM
+# 不认盘符协议），POSIX 可直接 `/abs/path`。
+
+- insert:
+    - id: secret-guard
+      name: 'dsh-secret-guard'
+      config:
+        maskResults: true
