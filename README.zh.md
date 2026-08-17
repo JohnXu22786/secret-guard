@@ -143,7 +143,7 @@ dsh --profile headless --patch D:/path/to/secret-guard/dev-overlay.yml "请列�
 
 - 包含 `/` 的模式锚定**完整路径**（`**/.aws/credentials` 匹配任意深度）；`**/` 前缀可匹配零层目录；
 - 不含 `/` 的模式只匹配**文件名**（`.env` 匹配任意目录下的 `.env`）；
-- `**` 跨目录段，`*` 单段内任意，`?` 单字符；
+- `**` 跨目录段，`*` 单段内任意，`?` 单字符；中间的 `**/` 也匹配零层或多层目录（`foo/**/bar` 同样匹配 `foo/bar`，与 gitignore 一致）；
 - 匹配不区分大小写（对拦截型规则更安全）。
 
 求值顺序：`allow` 放行名单 → 自定义 `rules`（按声明顺序）→ 内置默认规则（首条命中即止）。放行名单与规则中的 `allow` 效果一致，但放行名单永远最先检查。
@@ -237,7 +237,7 @@ sg_fingerprint { file: ".env", key: "DB_PASSWORD" }   # 9f2c… 稳定指纹
 
 ```sh
 npm install        # 仅 devDependencies（tsx / typescript / cordis 运行时 / schemastery）
-npm test           # node --import tsx --test tests/*.test.ts（71 个用例，约 3 秒）+ strip-only 加载冒烟
+npm test           # node --import tsx --test tests/*.test.ts（74 个用例，约 5 秒）+ strip-only 加载冒烟
 npm run typecheck  # tsc --noEmit
 ```
 
