@@ -14,6 +14,14 @@
   ],
   "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JohnXu22786/secret-guard.git"
+  },
+  "homepage": "https://github.com/JohnXu22786/secret-guard",
+  "bugs": {
+    "url": "https://github.com/JohnXu22786/secret-guard/issues"
+  },
   "engines": {
     "node": "^22.19.0 || >=24.0.0"
   },
