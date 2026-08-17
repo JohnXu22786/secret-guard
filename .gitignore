@@ -1,3 +1,14 @@
 node_modules/
 *.log
 .secret-guard/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+
+# npm pack artifacts
+*.tgz
+
+# TypeScript build info (kept local; this repo ships source, not builds)
+*.tsbuildinfo
