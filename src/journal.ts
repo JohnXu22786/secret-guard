@@ -66,14 +66,25 @@ export class Journal {
     }
   }
 
-  /** Parse the current journal file, best-effort. */
+  /**
+   * Parse the current journal file, best-effort. A single damaged line (e.g.
+   * a torn write during rotation) must not hide the rest of the journal —
+   * unparseable lines are skipped, and the surviving entries are returned.
+   */
   readAll(): JournalEntry[] {
     try {
       if (!existsSync(this.file)) return []
-      return readFileSync(this.file, 'utf8')
-        .split('\n')
-        .filter(line => line.trim() !== '')
-        .map(line => JSON.parse(line) as JournalEntry)
+      const entries: JournalEntry[] = []
+      for (const line of readFileSync(this.file, 'utf8').split('\n')) {
+        const trimmed = line.trim()
+        if (trimmed === '') continue
+        try {
+          entries.push(JSON.parse(trimmed) as JournalEntry)
+        } catch {
+          // skip the damaged line, keep the rest
+        }
+      }
+      return entries
     } catch {
       return []
     }

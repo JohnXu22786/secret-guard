@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, rmSync, readFileSync, readdirSync, existsSync } from 'node:fs'
+import { mkdtempSync, rmSync, readFileSync, readdirSync, existsSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Journal } from '../src/journal.ts'
@@ -85,6 +85,23 @@ test('Journal: single-line entries never break JSONL even with odd content', () 
     const parsed = JSON.parse(lines[0]!)
     assert.equal(parsed.path, 'a\nb"c\\d')
     assert.equal(parsed.message, 'quote " backslash \\ newline \n')
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('Journal: readAll skips damaged lines instead of losing the whole journal', () => {
+  const dir = tempDir()
+  try {
+    const j = new Journal(join(dir, 'logs'), { enabled: true, maxBytes: 10_000_000, keep: 3 })
+    j.write({ ts: 'first', kind: 'init', message: 'started' })
+    const file = join(dir, 'logs', 'events.jsonl')
+    writeFileSync(file, readFileSync(file, 'utf8') + '{ torn line mid-write\n')
+    j.write({ ts: 'last', kind: 'reload', rules: 1, allow: 0 })
+    const entries = j.readAll()
+    assert.equal(entries.length, 2, 'valid entries must survive a damaged line')
+    assert.equal(entries[0]!.kind, 'init')
+    assert.equal(entries[1]!.kind, 'reload')
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
