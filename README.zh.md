@@ -237,7 +237,7 @@ sg_fingerprint { file: ".env", key: "DB_PASSWORD" }   # 9f2c… 稳定指纹
 
 ```sh
 npm install        # 仅 devDependencies（tsx / typescript / cordis 运行时 / schemastery）
-npm test           # node --import tsx --test tests/*.test.ts（74 个用例，约 5 秒）+ strip-only 加载冒烟
+npm test           # node --import tsx --test tests/*.test.ts（77 个用例，约 5 秒）+ strip-only 加载冒烟
 npm run typecheck  # tsc --noEmit
 ```
 

@@ -237,7 +237,7 @@ Implementation note: polling is used instead of `fs.watch` because on Windows, d
 
 ```sh
 npm install        # devDependencies only (tsx / typescript / cordis runtime / schemastery)
-npm test           # node --import tsx --test tests/*.test.ts (74 test cases, ~5s) + strip-only load smoke test
+npm test           # node --import tsx --test tests/*.test.ts (77 test cases, ~5s) + strip-only load smoke test
 npm run typecheck  # tsc --noEmit
 ```
 
