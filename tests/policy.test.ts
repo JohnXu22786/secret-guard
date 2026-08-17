@@ -54,6 +54,20 @@ test('compileGlob: full-path patterns are anchored', () => {
   assert.ok(!nested.test('config/env/prod.env.bak'))
 })
 
+test('compileGlob: mid-pattern **/ matches zero directory levels (gitignore semantics)', () => {
+  const mid = compileGlob('foo/**/bar')
+  assert.ok(mid.test('foo/bar'), 'zero directory levels must match')
+  assert.ok(mid.test('foo/x/bar'))
+  assert.ok(mid.test('foo/x/y/bar'))
+  assert.ok(!mid.test('foo/bar/baz'), 'anchored: must not match deeper paths')
+  assert.ok(!mid.test('notfoo/bar'))
+  const trailing = compileGlob('foo/**')
+  assert.ok(trailing.test('foo/x'))
+  assert.ok(trailing.test('foo/x/y'))
+  assert.ok(trailing.test('foo/x/.env'), 'trailing ** keeps matching anything below')
+  assert.ok(!trailing.test('notfoo/x'), 'anchored: other roots must not match')
+})
+
 test('compileGlob: star/question semantics', () => {
   const star = compileGlob('*.env')
   assert.ok(star.test('api.env'))

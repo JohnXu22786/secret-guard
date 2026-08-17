@@ -6,7 +6,9 @@
  * - a pattern containing `/` is anchored to the normalized full path;
  * - a pattern without `/` matches the file's basename at any depth;
  * - `**` crosses path segments, `*` matches within one segment, `?` matches
- *   one character;
+ *   one character; a mid-pattern double-star followed by a slash matches zero
+ *   or more directory levels (gitignore semantics, e.g. `foo/` + `bar` at
+ *   any depth between the two segments);
  * - matching is case-insensitive (safer for blocklists on every platform).
  */
 
@@ -62,10 +64,10 @@ export function compileGlob(pattern: string): RegExp {
   const fullPath = pattern.includes('/')
   let src = pattern
   let prefix = ''
-  // A leading `**/` matches zero or more leading directories (gitignore
-  // semantics). A MID-pattern `**` requires at least one segment boundary,
-  // i.e. `foo/**/bar` does not match `foo/bar` — the default rule table only
-  // uses leading `**/`, so this distinction is documented, not relied on.
+  // A leading double-star-slash matches zero or more leading directories
+  // (gitignore semantics). A MID-pattern double-star-slash likewise matches
+  // zero or more directory levels (e.g. `foo/x/bar` and `foo/bar` for a
+  // `foo/x`/`bar` style pattern), consistent with gitignore.
   if (fullPath && src.startsWith('**/')) {
     prefix = '(?:.*/)?'
     src = src.slice(3)
@@ -75,8 +77,20 @@ export function compileGlob(pattern: string): RegExp {
     const ch = src[i]!
     if (ch === '*') {
       if (src[i + 1] === '*') {
-        out += '.*'
-        i++
+        if (i + 2 >= src.length) {
+          // trailing `**` matches anything after the slash
+          out += '.*'
+          i++
+        } else if (src[i + 2] === '/') {
+          // mid-pattern double-star-slash matches ZERO or more directory
+          // levels (gitignore semantics): e.g. `foo/x` + `bar` also matches
+          // `foo/bar`.
+          out += '(?:.*/)?'
+          i += 2
+        } else {
+          out += '.*'
+          i++
+        }
       } else {
         out += '[^/]*'
       }

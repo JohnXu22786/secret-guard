@@ -143,7 +143,7 @@ Rule `match` uses a .gitignore-like glob:
 
 - Patterns containing `/` anchor the **full path** (`**/.aws/credentials` matches at any depth); a `**/` prefix can match zero directory levels;
 - Patterns without `/` only match the **file name** (`.env` matches `.env` in any directory);
-- `**` spans directory segments, `*` matches anything within a segment, `?` matches a single character;
+- `**` spans directory segments, `*` matches anything within a segment, `?` matches a single character; a mid-pattern `**/` also matches zero directory levels (`foo/**/bar` matches `foo/bar`, gitignore semantics);
 - Matching is case-insensitive (safer for interception rules).
 
 Evaluation order: `allow` allowlist → custom `rules` (in declaration order) → built-in default rules (first match stops). The allowlist behaves like `allow` in rules, but is always checked first.
