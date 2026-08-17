@@ -23,8 +23,9 @@ export interface DotenvEntry {
 /**
  * Minimal dotenv parser: blank lines and `#` comments skipped, optional
  * `export` prefix, single/double-quoted values (double quotes honor the common
- * `\n` `\r` `\t` `\"` `\\` escapes), inline comments only after unquoted
- * values. Multi-line quoted values are not supported.
+ * `\n` `\r` `\t` `\"` `\\` escapes), inline comments after unquoted values AND
+ * after closed quoted values (`A="x" # note` keeps `x`; `A="x # y"` keeps the
+ * comment inside the quotes). Multi-line quoted values are not supported.
  */
 export function parseDotenv(text: string): DotenvEntry[] {
   const entries: DotenvEntry[] = []
@@ -38,20 +39,41 @@ export function parseDotenv(text: string): DotenvEntry[] {
     if (name.startsWith('export ')) name = name.slice('export '.length).trim()
     if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) continue
     const raw = line.slice(eq + 1).trim()
-    let value: string
-    if (raw.length >= 2 && raw.startsWith('"') && raw.endsWith('"')) {
-      value = raw
-        .slice(1, -1)
-        .replace(/\\n/g, '\n')
-        .replace(/\\r/g, '\r')
-        .replace(/\\t/g, '\t')
-        .replace(/\\"/g, '"')
-        .replace(/\\\\/g, '\\')
-    } else if (raw.length >= 2 && raw.startsWith("'") && raw.endsWith("'")) {
-      value = raw.slice(1, -1)
-    } else {
-      value = raw.replace(/\s*#.*$/, '')
+    let value: string | null = null
+    if (raw.startsWith('"') || raw.startsWith("'")) {
+      const quote = raw[0]!
+      // Find the CLOSING quote, skipping backslash-escaped characters
+      // (`"say \"hi\""` closes at the final quote, not at the escaped one).
+      let close = -1
+      for (let j = 1; j < raw.length; j++) {
+        if (raw[j] === '\\') {
+          j++
+          continue
+        }
+        if (raw[j] === quote) {
+          close = j
+          break
+        }
+      }
+      if (close > 0) {
+        const tail = raw.slice(close + 1).trim()
+        // A quoted value is only treated as such when everything after the
+        // closing quote is a comment or nothing — `A="a" "b"` stays unquoted.
+        if (tail === '' || tail.startsWith('#')) {
+          const body = raw.slice(1, close)
+          value =
+            quote === '"'
+              ? body
+                  .replace(/\\n/g, '\n')
+                  .replace(/\\r/g, '\r')
+                  .replace(/\\t/g, '\t')
+                  .replace(/\\"/g, '"')
+                  .replace(/\\\\/g, '\\')
+              : body
+        }
+      }
     }
+    if (value === null) value = raw.replace(/\s*#.*$/, '')
     entries.push({ name, value, line: i + 1 })
   }
   return entries
