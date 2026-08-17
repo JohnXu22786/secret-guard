@@ -42,6 +42,25 @@ test('parseDotenv: quoting and escapes', () => {
   assert.equal(entries[5]!.value, 'val # kept')
 })
 
+test('parseDotenv: inline comments after quoted values do not leak quotes', () => {
+  const text = [
+    'A="a b" # trailing note',
+    "B='x y' # note",
+    'C="c"#attached comment',
+    'D="x # inside" # outside',
+    'E=val # plain comment',
+  ].join('\n')
+  const entries = parseDotenv(text)
+  assert.equal(entries[0]!.value, 'a b', 'double-quoted value with trailing comment')
+  assert.equal(entries[1]!.value, 'x y', 'single-quoted value with trailing comment')
+  assert.equal(entries[2]!.value, 'c', 'comment attached without whitespace')
+  assert.equal(entries[3]!.value, 'x # inside', 'comment inside quotes is part of the value')
+  assert.equal(entries[4]!.value, 'val')
+  // a quote not closing before another token stays unquoted
+  const mixed = parseDotenv('A="a" "b"')
+  assert.equal(mixed[0]!.value, '"a" "b"')
+})
+
 test('parseDotenv: CRLF and malformed lines', () => {
   const text = 'A=1\r\nB=2\r\njust a line\r\nC=3'
   const entries = parseDotenv(text)
