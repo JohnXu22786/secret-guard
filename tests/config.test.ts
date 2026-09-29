@@ -1,7 +1,7 @@
 ﻿import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { resolveConfig } from '../src/config.ts'
-import { join } from 'node:path'
+import { isAbsolute, join } from 'node:path'
 
 test('resolveConfig: fills every default', () => {
   const c = resolveConfig({})
@@ -22,11 +22,18 @@ test('resolveConfig: fills every default', () => {
 
 test('resolveConfig: resolves relative seal/audit paths against cwd', () => {
   const c = resolveConfig({ sealKey: { path: 'keys/sg.key' }, audit: { dir: 'logs' } }, 'C:\\proj')
-  assert.equal(c.sealKey.path, 'C:\\proj\\keys\\sg.key')
-  assert.equal(c.audit.dir, 'C:\\proj\\logs')
-  const abs = resolveConfig({ sealKey: { path: '/abs/keys/sg.key' }, audit: { dir: 'D:\\other\\logs' } }, 'C:\\proj')
+  assert.equal(c.sealKey.path, join('C:\\proj', 'keys/sg.key'))
+  assert.equal(c.audit.dir, join('C:\\proj', 'logs'))
+  const windowsAbsoluteAuditPath = 'D:\\other\\logs'
+  const abs = resolveConfig({
+    sealKey: { path: '/abs/keys/sg.key' },
+    audit: { dir: windowsAbsoluteAuditPath },
+  }, 'C:\\proj')
   assert.equal(abs.sealKey.path, '/abs/keys/sg.key')
-  assert.equal(abs.audit.dir, 'D:\\other\\logs')
+  const expectedAuditPath = isAbsolute(windowsAbsoluteAuditPath)
+    ? windowsAbsoluteAuditPath
+    : join('C:\\proj', windowsAbsoluteAuditPath)
+  assert.equal(abs.audit.dir, expectedAuditPath)
 })
 
 test('resolveConfig: assigns auto ids to custom rules', () => {
